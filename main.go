@@ -1,24 +1,20 @@
 package main
 
 import (
-	"strconv"
-	"test4/database"
-	"time"
-
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
-	var db *database.Db = new(database.Db)
-	db.ConnectDb()
-	now := time.Now().UnixNano()
+	UsingCli()
+	// db.ConnectDb()
+	// now := time.Now().UnixNano()
 	// var err error
 	// engine, err = xorm.NewEngine("mysql", "root:@/m1test?charset=utf8")
 	// fmt.Println(err)
 
 	//bai 1: create table using struct
 	//db.CreateTable()
-	db.Sync2Table()
+	// db.Sync2Table()
 
 	//bai 2:
 	//insert
@@ -46,10 +42,10 @@ func main() {
 	// 	fmt.Fprintln(nil)
 	// }
 	//bai 3
-	for i := 0; i < 100; i++ {
-		user := database.User{"k" + strconv.Itoa(i), "user " + strconv.Itoa(i), now, now, now}
-		db.InsertUser(user)
-	}
-	db.ScanByRow()
+	// for i := 0; i < 100; i++ {
+	// 	user := database.User{"k" + strconv.Itoa(i), "user " + strconv.Itoa(i), now, now, now}
+	// 	db.InsertUser(user)
+	// }
+	// db.ScanByRow()
 
 }

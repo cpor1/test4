@@ -15,27 +15,49 @@ var db *database.Db = new(database.Db)
 
 func b1() error {
 	now := time.Now().UnixNano()
-	db.ConnectDb()
-	db.Sync2Table()
+	err := db.ConnectDb()
+	if err != nil {
+		panic(err)
+	}
 
+	err = db.Sync2Table()
+	if err != nil {
+		panic(err)
+	}
 	//insert
 	user := database.User{"1", "tungedit", 1592456481, now, now}
-	db.InsertUser(user)
-
+	err = db.InsertUser(user)
+	if err != nil {
+		panic(err)
+	}
 	//update
 	user2 := database.User{"1", "tungtest", 11111111110, 159245648121312, now}
-	db.UpdateUser(user2)
-
+	err = db.UpdateUser(user2)
+	if err != nil {
+		panic(err)
+	}
 	// list
-	db.ListUser()
-
+	err = db.ListUser()
+	if err != nil {
+		panic(err)
+	}
 	// detail by id
-	user3, _ := db.DetailUser("1")
-	fmt.Println(user3)
+	user3, err := db.DetailUser("1")
+	if err != nil {
+		panic(err)
+	} else {
+		fmt.Println(user3)
+	}
 
 	//  tạo user thì insert user_id vào user_point với số điểm 10.
-	db.InsertUserAndPoint(user)
-	db.ListPoint()
+	err = db.InsertUserAndPoint(user)
+	if err != nil {
+		panic(err)
+	}
+	err = db.ListPoint()
+	if err != nil {
+		panic(err)
+	}
 	return nil
 }
 
@@ -43,7 +65,7 @@ func b2() error {
 	db.ConnectDb()
 	err := db.SessionTest("1", 1231231)
 	if err != nil {
-		fmt.Fprintln(nil)
+		panic(err)
 	}
 	return nil
 }
@@ -53,9 +75,15 @@ func b3() error {
 	now := time.Now().UnixNano()
 	for i := 0; i < 100; i++ {
 		user := database.User{"k" + strconv.Itoa(i), "user " + strconv.Itoa(i), now, now, now}
-		db.InsertUser(user)
+		err := db.InsertUser(user)
+		if err != nil {
+			panic(err)
+		}
 	}
 	err := db.ScanByRow()
+	if err != nil {
+		panic(err)
+	}
 	return err
 }
 

@@ -13,8 +13,8 @@ func (db *Db) InsertPoint(p Point) {
 	fmt.Println(affected, err)
 }
 
-func (db *Db) ListPoint() {
+func (db *Db) ListPoint() error {
 	var points []Point
 	err := db.engine.Find(&points)
-	fmt.Println(err, points)
+	return err
 }

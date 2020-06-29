@@ -12,7 +12,7 @@ type Db struct {
 
 var tables []interface{}
 
-func (db *Db) ConnectDb() {
+func (db *Db) ConnectDb() error {
 	var err error
 	db.engine, err = xorm.NewEngine("mysql", "root:@/m1test?charset=utf8")
 	if err != nil {
@@ -20,6 +20,7 @@ func (db *Db) ConnectDb() {
 	} else {
 		fmt.Println("success")
 	}
+	return err
 }
 
 //bai 1 cau 1: tao dababase su dung struct

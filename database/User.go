@@ -17,24 +17,25 @@ type User struct {
 }
 
 // bai 1 cau 2: insert du lieu user
-func (db *Db) InsertUser(u User) {
-	affected, err := db.engine.Insert(&u)
-	fmt.Println(affected, err)
+func (db *Db) InsertUser(u User) error {
+	_, err := db.engine.Insert(&u)
+	return err
 }
 
 // bai 1 cau 2: update du lieu user
-func (db *Db) UpdateUser(u User) {
+func (db *Db) UpdateUser(u User) error {
 	now := time.Now().UnixNano()
 	id := u.Id
-	affected, err := db.engine.Where("id = ?", id).Update(&User{Name: u.Name, Birth: u.Birth, UpdatedAt: now})
-	fmt.Println(affected, err)
+	_, err := db.engine.Where("id = ?", id).Update(&User{Name: u.Name, Birth: u.Birth, UpdatedAt: now})
+	return err
 }
 
 // bai 1 cau 2: list danh sach User
-func (db *Db) ListUser() {
+func (db *Db) ListUser() error {
 	var users []User
 	err := db.engine.Find(&users)
-	fmt.Println(err, users)
+	fmt.Println(users)
+	return err
 }
 
 // bai 1 cau 2: đọc user theo id
@@ -48,15 +49,15 @@ func (db *Db) DetailUser(id string) (*User, error) {
 	if !has {
 		return nil, errors.New("Not Found")
 	}
-	return user, nil
+	return user, err
 }
 
 //bai 1 cau 2:
-func (db *Db) InsertUserAndPoint(u User) {
-	affected, err := db.engine.Insert(&u)
+func (db *Db) InsertUserAndPoint(u User) error {
+	_, err := db.engine.Insert(&u)
 	p := Point{u.Id, 10, 12}
 	db.InsertPoint(p)
-	fmt.Println(affected, err)
+	return err
 }
 
 //update birth user

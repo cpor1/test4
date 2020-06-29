@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"test4/database"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -31,21 +32,23 @@ func main() {
 	// db.ListUser()
 
 	// detail by id
-	// db.DetailUser()
+	// user , _ := db.DetailUser("1")
+	// fmt.Println(user)
 
 	// tạo user thì insert user_id vào user_point với số điểm 10.
 	//db.InsertUserAndPoint(user)
 	// db.ListPoint()
 
 	//bai 2
-	// user := database.User{"5", "tungtest", 11111111110, 159245648121312, now}
-	// db.SessionTest(user)
-
+	err := db.SessionTest("k5", 1231231)
+	if err != nil {
+		fmt.Fprintln(nil)
+	}
 	//bai 3
 	// for i := 0; i < 100; i++ {
 	// 	user := database.User{"k" + strconv.Itoa(i), "user " + strconv.Itoa(i), now, now, now}
 	// 	db.InsertUser(user)
 	// }
-	db.ScanByRow()
+	// db.ScanByRow()
 
 }

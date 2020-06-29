@@ -3,13 +3,12 @@ package database
 import "fmt"
 
 type Point struct {
-	User_id    string
-	Points     int64
-	Max_points int64
+	User_id    string `json:"user_id"`
+	Points     int64  `json:"points"`
+	Max_points int64  `json:"max_points"`
 }
 
-func (db *Db) InsertPoint(u User) {
-	p := Point{u.Id, 10, 12}
+func (db *Db) InsertPoint(p Point) {
 	affected, err := db.engine.Insert(&p)
 	fmt.Println(affected, err)
 }

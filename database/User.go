@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -8,11 +9,11 @@ import (
 )
 
 type User struct {
-	Id         string
-	Name       string
-	Birth      int64
-	Created    int64
-	Updated_at int64
+	Id         string `json:"id"`
+	Name       string `json:"name"`
+	Birth      int64  `json:"birth"`
+	Created    int64  `json:"created"`
+	Updated_at int64  `json:"updated_at"`
 }
 
 // bai 1 cau 2: insert du lieu user
@@ -37,17 +38,24 @@ func (db *Db) ListUser() {
 }
 
 // bai 1 cau 2: đọc user theo id
-func (db *Db) DetailUser() {
-	user := User{}
-	id := "2"
-	ishas, err := db.engine.Table(&user).Where("id = ?", id).Get(&user)
-	fmt.Println(ishas, err, user)
+func (db *Db) DetailUser(id string) (*User, error) {
+	user := &User{Id: id}
+	has, err := db.engine.Table(&user).Where("id = ?", id).Get(&user)
+	if err != nil {
+		log.Println("Fail")
+		return nil, err
+	}
+	if !has {
+		return nil, errors.New("Not Found")
+	}
+	return user, nil
 }
 
 //bai 1 cau 2:
 func (db *Db) InsertUserAndPoint(u User) {
 	affected, err := db.engine.Insert(&u)
-	db.InsertPoint(u)
+	p := Point{u.Id, 10, 12}
+	db.InsertPoint(p)
 	fmt.Println(affected, err)
 }
 
@@ -70,21 +78,45 @@ func (db *Db) AddPointAfterUpdate(u User) error {
 }
 
 //cau 2
-func (db *Db) SessionTest(u User) error {
+func (db *Db) SessionTest(id string, birth int64) error {
 	session := db.engine.NewSession()
 	defer session.Close()
-
 	session.Begin()
-	err := db.UpdateBirth(u)
+
+	user := &User{Id: id}
+	has, err := session.Get(user)
+	if err != nil {
+		session.Rollback()
+		log.Println("Fail")
+		return err
+	}
+	if !has {
+		session.Rollback()
+		log.Println("Not found user")
+		return err
+	}
+
+	now := time.Now().UnixNano()
+	_, err = session.Where("id = ?", id).Update(&User{Name: user.Name + " Updated", Birth: birth, Updated_at: now})
+	if err != nil {
+		session.Rollback()
+		fmt.Println("Update user birth fail")
+		return err
+	}
+
+	var points int64
+	_, err = session.Table(&Point{}).Where("user_id = ?", user.Id).Cols("points").Get(&points)
 	if err != nil {
 		session.Rollback()
 		return err
 	}
-	err = db.AddPointAfterUpdate(u)
+	_, err = session.Where("user_id = ?", user.Id).Update(&Point{Points: points + 10})
 	if err != nil {
 		session.Rollback()
+		fmt.Println("Update point fail")
 		return err
 	}
+
 	session.Commit()
 	return nil
 }
@@ -97,6 +129,7 @@ type dataUser struct {
 func (db *Db) ScanByRow() error {
 	buffScanData := make(chan *dataUser, 10)
 	defer close(buffScanData)
+
 	var wg sync.WaitGroup
 
 	for i := 1; i <= 2; i++ {

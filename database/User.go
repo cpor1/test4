@@ -9,11 +9,11 @@ import (
 )
 
 type User struct {
-	Id         string `json:"id"`
-	Name       string `json:"name"`
-	Birth      int64  `json:"birth"`
-	Created    int64  `json:"created"`
-	Updated_at int64  `json:"updated_at"`
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+	Birth     int64  `json:"birth"`
+	Created   int64  `json:"created"`
+	UpdatedAt int64  `json:"updatedAt"`
 }
 
 // bai 1 cau 2: insert du lieu user
@@ -26,7 +26,7 @@ func (db *Db) InsertUser(u User) {
 func (db *Db) UpdateUser(u User) {
 	now := time.Now().UnixNano()
 	id := u.Id
-	affected, err := db.engine.Where("id = ?", id).Update(&User{Name: u.Name, Birth: u.Birth, Updated_at: now})
+	affected, err := db.engine.Where("id = ?", id).Update(&User{Name: u.Name, Birth: u.Birth, UpdatedAt: now})
 	fmt.Println(affected, err)
 }
 
@@ -40,7 +40,7 @@ func (db *Db) ListUser() {
 // bai 1 cau 2: đọc user theo id
 func (db *Db) DetailUser(id string) (*User, error) {
 	user := &User{Id: id}
-	has, err := db.engine.Table(&user).Where("id = ?", id).Get(&user)
+	has, err := db.engine.Get(user)
 	if err != nil {
 		log.Println("Fail")
 		return nil, err
@@ -63,7 +63,8 @@ func (db *Db) InsertUserAndPoint(u User) {
 func (db *Db) UpdateBirth(u User) error {
 	now := time.Now().UnixNano()
 	id := u.Id
-	_, err := db.engine.Where("id = ?", id).Update(&User{Name: u.Name + " Updated", Birth: u.Birth, Updated_at: now})
+	name := u.Name + "Updated"
+	_, err := db.engine.Where("id = ?", id).Update(&User{Name: name, Birth: u.Birth, UpdatedAt: now})
 	return err
 	// add Begin() before any action
 }
@@ -97,7 +98,8 @@ func (db *Db) SessionTest(id string, birth int64) error {
 	}
 
 	now := time.Now().UnixNano()
-	_, err = session.Where("id = ?", id).Update(&User{Name: user.Name + " Updated", Birth: birth, Updated_at: now})
+	name := user.Name + "Updated"
+	_, err = session.Where("id = ?", id).Update(&User{Name: name, Birth: birth, UpdatedAt: now})
 	if err != nil {
 		session.Rollback()
 		fmt.Println("Update user birth fail")

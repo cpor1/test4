@@ -13,29 +13,41 @@ type User struct {
 	Name      string `json:"name"`
 	Birth     int64  `json:"birth"`
 	Created   int64  `json:"created"`
-	UpdatedAt int64  `json:"updatedAt"`
+	UpdatedAt int64  `json:"updated_at"`
 }
 
 // bai 1 cau 2: insert du lieu user
 func (db *Db) InsertUser(u User) error {
-	_, err := db.engine.Insert(&u)
+	affected, err := db.engine.Insert(&u)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return errors.New("can not insert")
+	}
 	return err
 }
 
 // bai 1 cau 2: update du lieu user
-func (db *Db) UpdateUser(u User) error {
-	now := time.Now().UnixNano()
-	id := u.Id
-	_, err := db.engine.Where("id = ?", id).Update(&User{Name: u.Name, Birth: u.Birth, UpdatedAt: now})
-	return err
+func (db *Db) UpdateUser(user, conditions *User) error {
+	aff, err := db.engine.Update(user, conditions)
+	if err != nil {
+		return err
+	}
+	if aff == 0 {
+		return errors.New("cannot update")
+	}
+	return nil
 }
 
 // bai 1 cau 2: list danh sach User
-func (db *Db) ListUser() error {
-	var users []User
+func (db *Db) ListUser() ([]*User, error) {
+	users := make([]*User, 0)
 	err := db.engine.Find(&users)
-	fmt.Println(users)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return users, err
 }
 
 // bai 1 cau 2: đọc user theo id
@@ -50,33 +62,6 @@ func (db *Db) DetailUser(id string) (*User, error) {
 		return nil, errors.New("Not Found")
 	}
 	return user, err
-}
-
-//bai 1 cau 2:
-func (db *Db) InsertUserAndPoint(u User) error {
-	_, err := db.engine.Insert(&u)
-	p := Point{u.Id, 10, 12}
-	db.InsertPoint(p)
-	return err
-}
-
-//update birth user
-func (db *Db) UpdateBirth(u User) error {
-	now := time.Now().UnixNano()
-	id := u.Id
-	name := u.Name + "Updated"
-	_, err := db.engine.Where("id = ?", id).Update(&User{Name: name, Birth: u.Birth, UpdatedAt: now})
-	return err
-	// add Begin() before any action
-}
-
-// them diem vao user
-func (db *Db) AddPointAfterUpdate(u User) error {
-	var points int64
-	affected, _ := db.engine.Table(&Point{}).Where("user_id = ?", u.Id).Cols("points").Get(&points)
-	fmt.Println(affected)
-	_, err := db.engine.Where("user_id = ?", u.Id).Update(&Point{Points: points + 10})
-	return err
 }
 
 //cau 2
@@ -97,23 +82,24 @@ func (db *Db) SessionTest(id string, birth int64) error {
 		log.Println("Not found user")
 		return err
 	}
-
-	now := time.Now().UnixNano()
-	name := user.Name + "Updated"
-	_, err = session.Where("id = ?", id).Update(&User{Name: name, Birth: birth, UpdatedAt: now})
+	user.Name = user.Name + " Updated"
+	user.Birth = birth
+	user.UpdatedAt = time.Now().UnixNano()
+	_, err = session.Update(user, &User{Id: id})
 	if err != nil {
 		session.Rollback()
 		fmt.Println("Update user birth fail")
 		return err
 	}
 
-	var points int64
-	_, err = session.Table(&Point{}).Where("user_id = ?", user.Id).Cols("points").Get(&points)
+	point := &Point{UserId: user.Id}
+	_, err = session.Get(point)
 	if err != nil {
 		session.Rollback()
 		return err
 	}
-	_, err = session.Where("user_id = ?", user.Id).Update(&Point{Points: points + 10})
+	point.Points = point.Points + 10
+	_, err = session.Update(point, &Point{UserId: user.Id})
 	if err != nil {
 		session.Rollback()
 		fmt.Println("Update point fail")

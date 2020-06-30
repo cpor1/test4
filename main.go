@@ -31,13 +31,16 @@ func Bai1(c *cli.Context) error {
 		panic(err)
 	}
 	//update
-	user2 := database.User{"1", "tungtest", 11111111110, 159245648121312, now}
-	err = db.UpdateUser(user2)
+	user2 := &database.User{}
+	conditions := &database.User{Id: "1"}
+	user2.Name = "test"
+	user2.Birth = now
+	err = db.UpdateUser(user2, conditions)
 	if err != nil {
 		panic(err)
 	}
 	// list
-	err = db.ListUser()
+	_, err = db.ListUser()
 	if err != nil {
 		panic(err)
 	}
@@ -49,12 +52,15 @@ func Bai1(c *cli.Context) error {
 		fmt.Println(user3)
 	}
 
-	//  tạo user thì insert user_id vào user_point với số điểm 10.
-	err = db.InsertUserAndPoint(user)
+	//  tạo user thì insert user_id vào user_point với số điểm 10.
+	user4 := database.User{"2", "tung2", now, now, now}
+	err = db.InsertUser(user4)
 	if err != nil {
 		panic(err)
+
 	}
-	err = db.ListPoint()
+	p := database.Point{user4.Id, 10, 10}
+	err = db.InsertPoint(p)
 	if err != nil {
 		panic(err)
 	}
@@ -67,7 +73,7 @@ func Bai2(c *cli.Context) error {
 		panic(err)
 	}
 
-	err = db.SessionTest("1", 1231231)
+	err = db.SessionTest("2", 1231231)
 	if err != nil {
 		panic(err)
 	}

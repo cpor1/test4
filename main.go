@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
+	"sync"
 	"test4/database"
 	"time"
 
@@ -85,19 +85,17 @@ func Bai3(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
-
-	now := time.Now().UnixNano()
-	for i := 0; i < 100; i++ {
-		user := database.User{"k" + strconv.Itoa(i), "user " + strconv.Itoa(i), now, now, now}
-		err := db.InsertUser(user)
-		if err != nil {
-			panic(err)
-		}
+	buffChannel := make(chan *database.DataUser, 100)
+	defer close(buffChannel)
+	var wg sync.WaitGroup
+	for i := 1; i <= 2; i++ {
+		go printData(buffChannel, &wg)
 	}
-	err = db.ScanByRow()
+	err = db.ScanByRow(buffChannel, &wg)
 	if err != nil {
 		panic(err)
 	}
+	wg.Wait()
 	return nil
 }
 

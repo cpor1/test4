@@ -16,6 +16,11 @@ type User struct {
 	UpdatedAt int64  `json:"updated_at"`
 }
 
+type DataUser struct {
+	Identity int
+	User     User
+}
+
 // bai 1 cau 2: insert du lieu user
 func (db *Db) InsertUser(u User) error {
 	affected, err := db.engine.Insert(&u)
@@ -64,6 +69,29 @@ func (db *Db) DetailUser(id string) (*User, error) {
 	return user, err
 }
 
+//cau 3
+func (db *Db) ScanByRow(buffChannel chan *DataUser, wg *sync.WaitGroup) error {
+	rows, err := db.engine.Rows(&User{})
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	user := new(User)
+	i := 1
+	for rows.Next() {
+		err = rows.Scan(user)
+		if err != nil {
+			return err
+		} else {
+			dataUser := &DataUser{Identity: i, User: *user}
+			buffChannel <- dataUser
+			wg.Add(1)
+			i++
+		}
+	}
+	return nil
+}
+
 //cau 2
 func (db *Db) SessionTest(id string, birth int64) error {
 	session := db.engine.NewSession()
@@ -108,50 +136,4 @@ func (db *Db) SessionTest(id string, birth int64) error {
 
 	session.Commit()
 	return nil
-}
-
-type dataUser struct {
-	identity int
-	user     User
-}
-
-func (db *Db) ScanByRow() error {
-	buffScanData := make(chan *dataUser, 10)
-	defer close(buffScanData)
-
-	var wg sync.WaitGroup
-
-	for i := 1; i <= 2; i++ {
-		go printData(buffScanData, &wg)
-	}
-
-	rows, err := db.engine.Rows(&User{})
-
-	log.Println(err)
-
-	defer rows.Close()
-
-	user := new(User)
-
-	i := 0
-	for rows.Next() {
-		rows.Scan(user)
-		dUser := &dataUser{user: *user, identity: i}
-		i++
-		buffScanData <- dUser
-		wg.Add(1)
-	}
-	wg.Wait()
-	return nil
-}
-
-func printData(jobs chan *dataUser, wg *sync.WaitGroup) {
-
-	for {
-		select {
-		case data := <-jobs:
-			fmt.Printf("%v - %v - %v", data.identity, data.user.Id, data.user.Name)
-			wg.Done()
-		}
-	}
 }
